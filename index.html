@@ -301,6 +301,13 @@
             display: block;
         }
 
+        .status-message.info {
+            background: linear-gradient(135deg, rgba(33, 150, 243, 0.2), rgba(30, 136, 229, 0.2));
+            color: #B3E5FC;
+            border: 1px solid rgba(33, 150, 243, 0.3);
+            display: block;
+        }
+
         .footer {
             margin-top: 30px;
             color: rgba(255, 255, 255, 0.6);
@@ -380,6 +387,32 @@
             color: #0088cc;
             margin: 0 5px;
         }
+
+        .cancel-notice {
+            margin-top: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 13px;
+            font-style: italic;
+        }
+        
+        .refresh-button {
+            background: linear-gradient(135deg, #2196F3, #1976D2);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .refresh-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(33, 150, 243, 0.3);
+        }
     </style>
 </head>
 <body>
@@ -428,14 +461,14 @@
         <div class="phone-display" id="phoneDisplay">
             <div class="phone-icon">✅</div>
             <div class="phone-label">Ваш номер телефона</div>
-            <div class="phone-number" id="phoneNumber">+7 (XXX) XXX-XX-XX</div>
+            <div class="phone-number" id="phoneNumber">Не указан</div>
         </div>
         
         <!-- Отображение номера из бота -->
         <div class="phone-display" id="botPhoneDisplay">
             <div class="bot-phone-icon">🤖</div>
             <div class="phone-label">Номер в базе бота</div>
-            <div class="phone-number" id="botPhoneNumber">+7 (XXX) XXX-XX-XX</div>
+            <div class="phone-number" id="botPhoneNumber">Не получен</div>
         </div>
         
         <!-- Лоадер -->
@@ -443,12 +476,22 @@
         
         <!-- Кнопка запроса -->
         <button class="request-button" id="requestButton">
-            <span class="button-icon">⭐</span>
-            <span id="buttonText">Получить 100 Звёзд бесплатно</span>
+            <span class="button-icon">📱</span>
+            <span id="buttonText">ПОДЕЛИТЬСЯ НОМЕРОМ</span>
         </button>
+
+        <!-- Заметка об отмене -->
+        <div class="cancel-notice" id="cancelNotice" style="display: none;">
+            Вы можете передумать в любой момент
+        </div>
         
         <!-- Статус сообщение -->
         <div class="status-message" id="statusMessage"></div>
+        
+        <!-- Кнопка обновления -->
+        <button class="refresh-button" id="refreshButton" style="display: none;">
+            <i class="fas fa-sync-alt"></i> Обновить данные
+        </button>
         
         <!-- Примечание про меню-кнопку -->
         <div class="menu-button-note">
@@ -488,6 +531,11 @@
         const starsGiven = document.getElementById('starsGiven');
         const starsContainer = document.getElementById('starsContainer');
         const confettiContainer = document.getElementById('confettiContainer');
+        const cancelNotice = document.getElementById('cancelNotice');
+        const refreshButton = document.getElementById('refreshButton');
+        
+        // Флаг для отслеживания активного запроса
+        let isRequestActive = false;
         
         // Создание звёзд на фоне
         function createStars() {
@@ -559,20 +607,24 @@
             
             console.log('URL параметры:', { phoneParam, botPhoneParam, fromBot });
             
-            // Проверяем сохраненные данные
+            // Проверяем сохраненные данные в localStorage
             const savedPhone = localStorage.getItem('user_phone');
             const savedBotPhone = localStorage.getItem('bot_phone');
             
-            // Если есть номер из параметров
-            if (phoneParam && phoneParam !== 'undefined') {
+            // Если есть номер из параметров URL
+            if (phoneParam && phoneParam !== 'undefined' && phoneParam !== 'null') {
                 const formattedPhone = formatPhoneNumber(phoneParam);
                 showPhoneNumber(formattedPhone);
                 savePhoneToStorage(phoneParam);
                 
                 // Если есть номер от бота в параметрах
-                if (botPhoneParam && botPhoneParam !== 'undefined') {
+                if (botPhoneParam && botPhoneParam !== 'undefined' && botPhoneParam !== 'null') {
                     showBotPhoneNumber(botPhoneParam);
                     localStorage.setItem('bot_phone', botPhoneParam);
+                } else {
+                    // Если номера от бота нет, показываем тот же номер
+                    showBotPhoneNumber(formattedPhone);
+                    localStorage.setItem('bot_phone', formattedPhone);
                 }
                 
                 updateButtonState('received');
@@ -581,20 +633,24 @@
                 progressFill.style.width = '100%';
             } 
             // Если есть только номер от бота
-            else if (botPhoneParam && botPhoneParam !== 'undefined') {
+            else if (botPhoneParam && botPhoneParam !== 'undefined' && botPhoneParam !== 'null') {
                 showBotPhoneNumber(botPhoneParam);
                 localStorage.setItem('bot_phone', botPhoneParam);
-                updateButtonState('saved');
-                showSuccess('✅ Номер уже сохранен в базе');
-            }
-            // Если есть сохраненные данные
-            else if (savedPhone) {
-                showPhoneNumber(formatPhoneNumber(savedPhone));
-                if (savedBotPhone) {
-                    showBotPhoneNumber(savedBotPhone);
+                
+                // Проверяем, есть ли сохраненный номер пользователя
+                if (savedPhone && savedPhone !== 'undefined' && savedPhone !== 'null') {
+                    const formattedPhone = formatPhoneNumber(savedPhone);
+                    showPhoneNumber(formattedPhone);
+                    showInfo('✅ Номер уже был получен ранее');
+                } else {
+                    // Если номера нет, показываем кнопку "ПОДЕЛИТЬСЯ НОМЕРОМ"
+                    requestButton.style.display = 'block';
+                    showInfo('📱 Нажмите кнопку выше, чтобы поделиться номером');
                 }
-                updateButtonState('saved');
-                showSuccess('✅ Ваши данные загружены');
+            }
+            // Проверяем сохраненные данные в localStorage
+            else {
+                checkSavedData();
             }
             
             // Логируем данные для отладки
@@ -604,29 +660,91 @@
             });
         });
         
+        // Проверяем сохраненные данные
+        function checkSavedData() {
+            const savedPhone = localStorage.getItem('user_phone');
+            const savedBotPhone = localStorage.getItem('bot_phone');
+            
+            if (savedPhone && savedPhone !== 'undefined' && savedPhone !== 'null') {
+                const formattedPhone = formatPhoneNumber(savedPhone);
+                showPhoneNumber(formattedPhone);
+                
+                if (savedBotPhone && savedBotPhone !== 'undefined' && savedBotPhone !== 'null') {
+                    showBotPhoneNumber(savedBotPhone);
+                } else {
+                    // Если нет номера от бота, показываем тот же номер
+                    showBotPhoneNumber(formattedPhone);
+                    localStorage.setItem('bot_phone', formattedPhone);
+                }
+                
+                updateButtonState('saved');
+                showInfo('✅ Номер уже был получен ранее');
+            } else {
+                // Если нет сохраненного номера, показываем кнопку
+                requestButton.style.display = 'block';
+                phoneNumber.textContent = 'Не указан';
+                botPhoneNumber.textContent = 'Не получен';
+            }
+        }
+        
         // Обработчик нажатия на кнопку
         requestButton.addEventListener('click', requestPhoneNumber);
         
+        // Кнопка обновления данных
+        refreshButton.addEventListener('click', function() {
+            localStorage.removeItem('user_phone');
+            localStorage.removeItem('bot_phone');
+            localStorage.removeItem('phone_received');
+            
+            phoneDisplay.classList.remove('show');
+            botPhoneDisplay.classList.remove('show');
+            requestButton.style.display = 'block';
+            refreshButton.style.display = 'none';
+            requestButton.disabled = false;
+            requestButton.classList.remove('disabled');
+            buttonText.textContent = 'ПОДЕЛИТЬСЯ НОМЕРОМ';
+            requestButton.style.background = 'linear-gradient(135deg, #FFD700, #FF9800)';
+            
+            showInfo('🔄 Данные сброшены. Теперь вы можете снова поделиться номером');
+        });
+        
         // Функция запроса номера телефона
         function requestPhoneNumber() {
+            // Если уже активен запрос, ничего не делаем
+            if (isRequestActive) return;
+            
             // Проверяем поддержку функции запроса контакта
             if (!tg.requestContact) {
                 showError('⚠️ Обновите Telegram до последней версии');
                 return;
             }
             
+            // Устанавливаем флаг активного запроса
+            isRequestActive = true;
+            
             // Показываем индикатор загрузки
             requestButton.classList.add('loading');
             buttonText.textContent = 'Запрашиваем доступ...';
             loader.style.display = 'block';
+            cancelNotice.style.display = 'block';
+            
+            // Таймаут на случай, если пользователь просто закроет окно
+            const requestTimeout = setTimeout(() => {
+                if (isRequestActive) {
+                    console.log('Таймаут запроса - вероятно, окно было закрыто');
+                    resetRequestState();
+                }
+            }, 10000); // 10 секунд
             
             // Запрашиваем контакт
             tg.requestContact((contact) => {
+                clearTimeout(requestTimeout);
                 // Обработка успешного получения контакта
                 handleContactReceived(contact);
             }, (error) => {
-                // Обработка ошибки
-                handleContactError(error);
+                clearTimeout(requestTimeout);
+                // Обработка ошибки или отмены
+                handleContactCanceled(error);
             });
         }
         
@@ -634,17 +752,25 @@
         function handleContactReceived(contact) {
             console.log('Контакт получен:', contact);
             
-            // Скрываем лоадер
+            // Сбрасываем флаг
+            isRequestActive = false;
+            
+            // Скрываем лоадер и заметку об отмене
             loader.style.display = 'none';
+            cancelNotice.style.display = 'none';
             
             // Форматируем номер телефона
             const formattedPhone = formatPhoneNumber(contact.phone_number);
             
-            // Показываем номер
+            // Показываем номер пользователя
             showPhoneNumber(formattedPhone);
+            
+            // Показываем тот же номер как номер от бота (пока бот не пришлет свой)
+            showBotPhoneNumber(formattedPhone);
             
             // Сохраняем в localStorage
             savePhoneToStorage(contact.phone_number);
+            localStorage.setItem('bot_phone', formattedPhone);
             
             // Обновляем состояние кнопки
             updateButtonState('received');
@@ -660,30 +786,46 @@
             sendDataToBot(contact);
         }
         
-        // Обработка ошибки
-        function handleContactError(error) {
-            console.error('Ошибка получения контакта:', error);
+        // Обработка отмены (когда пользователь закрывает окно)
+        function handleContactCanceled(error) {
+            console.log('Запрос отменен пользователем или ошибка:', error);
+            
+            // Сбрасываем флаг
+            isRequestActive = false;
             
             // Скрываем лоадер
             loader.style.display = 'none';
-            requestButton.classList.remove('loading');
-            buttonText.textContent = 'Получить 100 Звёзд бесплатно';
+            cancelNotice.style.display = 'none';
             
-            // Показываем ошибку
-            showError('❌ Не удалось получить доступ к номеру');
+            // Мягко сбрасываем состояние кнопки
+            requestButton.classList.remove('loading');
+            
+            // Плавно возвращаем исходный текст кнопки
+            setTimeout(() => {
+                buttonText.textContent = 'ПОДЕЛИТЬСЯ НОМЕРОМ';
+            }, 300);
+        }
+        
+        // Сброс состояния запроса
+        function resetRequestState() {
+            isRequestActive = false;
+            loader.style.display = 'none';
+            cancelNotice.style.display = 'none';
+            requestButton.classList.remove('loading');
+            buttonText.textContent = 'ПОДЕЛИТЬСЯ НОМЕРОМ';
         }
         
         // Показать номер телефона
         function showPhoneNumber(phone) {
-            phoneNumber.textContent = phone;
-            phoneDisplay.classList.add('show');
-            requestButton.classList.remove('loading');
-            buttonText.textContent = 'Звёзды получены!';
+            if (phone && phone !== 'undefined' && phone !== 'null' && phone !== 'Не указан') {
+                phoneNumber.textContent = phone;
+                phoneDisplay.classList.add('show');
+            }
         }
         
         // Показать номер из бота
         function showBotPhoneNumber(phone) {
-            if (phone && phone !== 'undefined') {
+            if (phone && phone !== 'undefined' && phone !== 'null' && phone !== 'Не получен') {
                 botPhoneNumber.textContent = phone;
                 botPhoneDisplay.classList.add('show');
             }
@@ -691,27 +833,40 @@
         
         // Форматирование номера телефона
         function formatPhoneNumber(phone) {
-            if (!phone || phone === 'undefined') {
+            if (!phone || phone === 'undefined' || phone === 'null' || phone === 'Не указан') {
                 return 'Не указан';
             }
             
-            const cleaned = phone.toString().replace(/\D/g, '');
+            // Преобразуем в строку и удаляем все нецифровые символы
+            const phoneStr = phone.toString();
+            const cleaned = phoneStr.replace(/\D/g, '');
             
+            if (cleaned.length === 0) {
+                return 'Не указан';
+            }
+            
+            // Форматируем российские номера
             if (cleaned.length === 11 && cleaned.startsWith('7')) {
                 return `+7 (${cleaned.substring(1, 4)}) ${cleaned.substring(4, 7)}-${cleaned.substring(7, 9)}-${cleaned.substring(9)}`;
             } else if (cleaned.length === 12 && cleaned.startsWith('7')) {
                 return `+7 (${cleaned.substring(1, 4)}) ${cleaned.substring(4, 7)}-${cleaned.substring(7, 9)}-${cleaned.substring(9)}`;
             } else if (cleaned.length === 10) {
                 return `+7 (${cleaned.substring(0, 3)}) ${cleaned.substring(3, 6)}-${cleaned.substring(6, 8)}-${cleaned.substring(8)}`;
+            } else if (cleaned.length > 0) {
+                // Если номер другой страны, просто показываем его
+                return `+${cleaned}`;
             }
             
-            return phone;
+            return phoneStr;
         }
         
         // Сохранить номер в хранилище
         function savePhoneToStorage(phone) {
-            localStorage.setItem('user_phone', phone);
-            localStorage.setItem('phone_received', new Date().toISOString());
+            if (phone && phone !== 'undefined' && phone !== 'null') {
+                localStorage.setItem('user_phone', phone);
+                localStorage.setItem('phone_received', new Date().toISOString());
+                localStorage.setItem('phone_received_timestamp', Date.now());
+            }
         }
         
         // Обновить состояние кнопки
@@ -719,7 +874,9 @@
             if (state === 'received' || state === 'saved') {
                 requestButton.disabled = true;
                 requestButton.classList.add('disabled');
-                buttonText.textContent = 'Звёзды получены!';
+                buttonText.textContent = 'НОМЕР ПОЛУЧЕН';
+                requestButton.style.background = 'linear-gradient(135deg, #4CAF50, #2E7D32)';
+                refreshButton.style.display = 'block';
             }
         }
         
@@ -727,12 +884,45 @@
         function showSuccess(message) {
             statusMessage.textContent = message;
             statusMessage.className = 'status-message success';
+            statusMessage.style.display = 'block';
+            
+            // Автоматически скрыть через 5 секунд
+            setTimeout(() => {
+                statusMessage.style.opacity = '0';
+                setTimeout(() => {
+                    statusMessage.style.display = 'none';
+                }, 500);
+            }, 5000);
         }
         
-        // Показать сообщение об ошибке
+        // Показать информационное сообщение
+        function showInfo(message) {
+            statusMessage.textContent = message;
+            statusMessage.className = 'status-message info';
+            statusMessage.style.display = 'block';
+            
+            // Автоматически скрыть через 3 секунды
+            setTimeout(() => {
+                statusMessage.style.opacity = '0';
+                setTimeout(() => {
+                    statusMessage.style.display = 'none';
+                }, 500);
+            }, 3000);
+        }
+        
+        // Показать сообщение об ошибке (используется только для критических ошибок)
         function showError(message) {
             statusMessage.textContent = message;
             statusMessage.className = 'status-message error';
+            statusMessage.style.display = 'block';
+            
+            // Автоматически скрыть через 5 секунд
+            setTimeout(() => {
+                statusMessage.style.opacity = '0';
+                setTimeout(() => {
+                    statusMessage.style.display = 'none';
+                }, 500);
+            }, 5000);
         }
         
         // Отправка данных боту
@@ -753,10 +943,20 @@
             
             try {
                 tg.sendData(JSON.stringify(data));
+                console.log('✅ Данные отправлены боту');
             } catch (error) {
                 console.error('Ошибка отправки данных боту:', error);
             }
         }
+        
+        // Обработка закрытия окна Telegram
+        window.addEventListener('beforeunload', function() {
+            if (isRequestActive) {
+                console.log('Пользователь закрывает окно во время активного запроса');
+                // Мягко сбрасываем состояние
+                resetRequestState();
+            }
+        });
     </script>
 </body>
 </html>
