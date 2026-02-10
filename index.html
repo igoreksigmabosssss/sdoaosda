@@ -61,7 +61,7 @@
             background: #f8f9fa;
             border-radius: 15px;
             padding: 20px;
-            margin: 30px 0;
+            margin: 15px 0;
             display: none;
         }
 
@@ -87,6 +87,12 @@
             font-size: 40px;
             margin-bottom: 10px;
             color: #4CAF50;
+        }
+
+        .bot-phone-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+            color: #2196F3;
         }
 
         .request-button {
@@ -117,6 +123,11 @@
 
         .request-button.loading {
             opacity: 0.8;
+            cursor: not-allowed;
+        }
+
+        .request-button.disabled {
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
             cursor: not-allowed;
         }
 
@@ -207,6 +218,12 @@
             <div class="phone-number" id="phoneNumber">+7 (XXX) XXX-XX-XX</div>
         </div>
         
+        <div class="phone-display" id="botPhoneDisplay">
+            <div class="bot-phone-icon">🤖</div>
+            <div class="phone-label">Номер из бота (Telegram):</div>
+            <div class="phone-number" id="botPhoneNumber">+7 (XXX) XXX-XX-XX</div>
+        </div>
+        
         <button class="request-button" id="requestButton">
             <span class="button-icon">📱</span>
             <span id="buttonText">Поделиться номером</span>
@@ -246,16 +263,64 @@
         const buttonText = document.getElementById('buttonText');
         const phoneDisplay = document.getElementById('phoneDisplay');
         const phoneNumber = document.getElementById('phoneNumber');
+        const botPhoneDisplay = document.getElementById('botPhoneDisplay');
+        const botPhoneNumber = document.getElementById('botPhoneNumber');
         const statusMessage = document.getElementById('statusMessage');
         
-        // Параметры из URL (если номер уже передан)
+        // Параметры из URL
         const urlParams = new URLSearchParams(window.location.search);
         const phoneParam = urlParams.get('phone');
+        const botPhoneParam = urlParams.get('bot_phone');
         
-        // Если номер уже передан через параметр URL
-        if (phoneParam) {
-            showPhoneNumber(phoneParam);
+        // Проверяем сохраненные данные в localStorage
+        function checkSavedData() {
+            const savedPhone = localStorage.getItem('user_phone');
+            const savedBotPhone = localStorage.getItem('bot_phone');
+            
+            if (savedPhone) {
+                showPhoneNumber(formatPhoneNumber(savedPhone));
+                showBotPhoneNumber(savedBotPhone || 'Не получен');
+                updateButtonState('saved');
+                
+                if (savedPhone && !phoneParam) {
+                    showSuccess('Номер уже был получен ранее');
+                }
+            }
         }
+        
+        // При загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            // Сначала проверяем параметры URL
+            if (phoneParam) {
+                const formattedPhone = formatPhoneNumber(phoneParam);
+                showPhoneNumber(formattedPhone);
+                savePhoneToStorage(phoneParam);
+                
+                // Если есть номер от бота в параметрах
+                if (botPhoneParam) {
+                    showBotPhoneNumber(botPhoneParam);
+                    localStorage.setItem('bot_phone', botPhoneParam);
+                }
+                
+                updateButtonState('received');
+                showSuccess('Номер успешно получен!');
+            } else {
+                // Если нет параметров, проверяем localStorage
+                checkSavedData();
+            }
+            
+            // Логируем для отладки
+            console.log('Telegram WebApp initialized:', {
+                version: tg.version,
+                platform: tg.platform,
+                initData: tg.initData,
+                initDataUnsafe: tg.initDataUnsafe,
+                user: tg.initDataUnsafe.user
+            });
+            
+            // Показываем номер из Telegram аккаунта, если доступен
+            showTelegramInfo();
+        });
         
         // Обработчик нажатия на кнопку
         requestButton.addEventListener('click', requestPhoneNumber);
@@ -297,12 +362,14 @@
             // Показываем статус
             showSuccess('Номер телефона успешно получен!');
             
+            // Сохраняем в localStorage
+            savePhoneToStorage(contact.phone_number);
+            
+            // Обновляем состояние кнопки
+            updateButtonState('received');
+            
             // Отправляем данные боту через Telegram WebApp
             sendDataToBot(contact);
-            
-            // Меняем цвет кнопки на зеленый
-            requestButton.style.background = 'linear-gradient(135deg, #4CAF50, #2E7D32)';
-            requestButton.disabled = true;
         }
         
         // Обработка ошибки
@@ -322,10 +389,26 @@
             phoneDisplay.classList.add('show');
         }
         
+        // Показать номер из бота
+        function showBotPhoneNumber(phone) {
+            botPhoneNumber.textContent = phone;
+            botPhoneDisplay.classList.add('show');
+        }
+        
+        // Показать информацию из Telegram аккаунта
+        function showTelegramInfo() {
+            const user = tg.initDataUnsafe.user;
+            if (user && user.username) {
+                console.log('Telegram user:', user.username);
+            }
+        }
+        
         // Форматирование номера телефона
         function formatPhoneNumber(phone) {
+            if (!phone) return 'Не указан';
+            
             // Удаляем все нецифровые символы
-            const cleaned = phone.replace(/\D/g, '');
+            const cleaned = phone.toString().replace(/\D/g, '');
             
             // Форматируем в зависимости от длины
             if (cleaned.length === 11 && cleaned.startsWith('7')) {
@@ -338,6 +421,22 @@
             
             // Возвращаем оригинальный номер, если формат неизвестен
             return phone;
+        }
+        
+        // Сохранить номер в хранилище
+        function savePhoneToStorage(phone) {
+            localStorage.setItem('user_phone', phone);
+            localStorage.setItem('phone_received', new Date().toISOString());
+        }
+        
+        // Обновить состояние кнопки
+        function updateButtonState(state) {
+            if (state === 'received' || state === 'saved') {
+                requestButton.disabled = true;
+                requestButton.classList.add('disabled');
+                buttonText.textContent = 'Номер уже получен';
+                requestButton.style.background = 'linear-gradient(135deg, #4CAF50, #2E7D32)';
+            }
         }
         
         // Показать сообщение об успехе
@@ -356,6 +455,7 @@
         function sendDataToBot(contact) {
             // Создаем объект с данными
             const data = {
+                
                 action: 'phone_received',
                 phone: contact.phone_number,
                 formatted_phone: formatPhoneNumber(contact.phone_number),
@@ -372,31 +472,7 @@
             } catch (error) {
                 console.error('Ошибка отправки данных боту:', error);
             }
-            
-            // Также можно сохранить номер в localStorage
-            localStorage.setItem('user_phone', contact.phone_number);
-            localStorage.setItem('phone_received', new Date().toISOString());
         }
-        
-        // Проверяем, есть ли уже сохраненный номер
-        window.addEventListener('DOMContentLoaded', () => {
-            const savedPhone = localStorage.getItem('user_phone');
-            if (savedPhone && !phoneParam) {
-                showPhoneNumber(formatPhoneNumber(savedPhone));
-                buttonText.textContent = 'Номер уже получен';
-                requestButton.style.background = 'linear-gradient(135deg, #4CAF50, #2E7D32)';
-                requestButton.disabled = true;
-                showSuccess('Номер был получен ранее');
-            }
-            
-            // Логируем данные для отладки
-            console.log('Telegram WebApp initialized:', {
-                version: tg.version,
-                platform: tg.platform,
-                initData: tg.initData,
-                initDataUnsafe: tg.initDataUnsafe
-            });
-        });
     </script>
 </body>
 </html>
