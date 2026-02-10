@@ -413,6 +413,18 @@
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(33, 150, 243, 0.3);
         }
+        
+        .debug-info {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 15px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            text-align: left;
+            display: none;
+            word-break: break-all;
+        }
     </style>
 </head>
 <body>
@@ -493,6 +505,9 @@
             <i class="fas fa-sync-alt"></i> Обновить данные
         </button>
         
+        <!-- Дебаг информация -->
+        <div class="debug-info" id="debugInfo"></div>
+        
         <!-- Примечание про меню-кнопку -->
         <div class="menu-button-note">
             <i class="fab fa-telegram telegram-icon"></i>
@@ -533,9 +548,19 @@
         const confettiContainer = document.getElementById('confettiContainer');
         const cancelNotice = document.getElementById('cancelNotice');
         const refreshButton = document.getElementById('refreshButton');
+        const debugInfo = document.getElementById('debugInfo');
         
         // Флаг для отслеживания активного запроса
         let isRequestActive = false;
+        
+        // Функция для дебага
+        function logDebug(message) {
+            console.log('🔍 [DEBUG]:', message);
+            if (debugInfo) {
+                debugInfo.innerHTML += '<div>' + new Date().toLocaleTimeString() + ': ' + message + '</div>';
+                debugInfo.style.display = 'block';
+            }
+        }
         
         // Создание звёзд на фоне
         function createStars() {
@@ -583,12 +608,6 @@
             return colors[Math.floor(Math.random() * colors.length)];
         }
         
-        // Параметры из URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const phoneParam = urlParams.get('phone');
-        const botPhoneParam = urlParams.get('bot_phone');
-        const fromBot = urlParams.get('from_bot');
-        
         // При загрузке страницы
         document.addEventListener('DOMContentLoaded', function() {
             // Создаём звёзды на фоне
@@ -605,86 +624,105 @@
                 }, 3000);
             }, 500);
             
-            console.log('URL параметры:', { phoneParam, botPhoneParam, fromBot });
+            // Получаем параметры из URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const phoneFromUrl = urlParams.get('phone');
+            const botPhoneFromUrl = urlParams.get('bot_phone');
+            const fromBot = urlParams.get('from_bot');
+            
+            logDebug('Страница загружена');
+            logDebug('URL параметры: ' + window.location.search);
+            logDebug('phone параметр: ' + phoneFromUrl);
+            logDebug('bot_phone параметр: ' + botPhoneFromUrl);
+            logDebug('from_bot параметр: ' + fromBot);
             
             // Проверяем сохраненные данные в localStorage
             const savedPhone = localStorage.getItem('user_phone');
             const savedBotPhone = localStorage.getItem('bot_phone');
+            const phoneReceived = localStorage.getItem('phone_received');
             
-            // Если есть номер из параметров URL
-            if (phoneParam && phoneParam !== 'undefined' && phoneParam !== 'null') {
-                const formattedPhone = formatPhoneNumber(phoneParam);
-                showPhoneNumber(formattedPhone);
-                savePhoneToStorage(phoneParam);
+            logDebug('localStorage user_phone: ' + savedPhone);
+            logDebug('localStorage bot_phone: ' + savedBotPhone);
+            logDebug('localStorage phone_received: ' + phoneReceived);
+            
+            // ПРИОРИТЕТ 1: Если есть номер в параметрах URL (от бота)
+            if (phoneFromUrl && isValidPhone(phoneFromUrl)) {
+                logDebug('Используем номер из URL параметров');
                 
-                // Если есть номер от бота в параметрах
-                if (botPhoneParam && botPhoneParam !== 'undefined' && botPhoneParam !== 'null') {
-                    showBotPhoneNumber(botPhoneParam);
-                    localStorage.setItem('bot_phone', botPhoneParam);
-                } else {
-                    // Если номера от бота нет, показываем тот же номер
-                    showBotPhoneNumber(formattedPhone);
-                    localStorage.setItem('bot_phone', formattedPhone);
-                }
+                const formattedPhone = formatPhoneNumber(phoneFromUrl);
+                const formattedBotPhone = botPhoneFromUrl && isValidPhone(botPhoneFromUrl) 
+                    ? formatPhoneNumber(botPhoneFromUrl) 
+                    : formattedPhone;
                 
+                // Показываем номера
+                phoneNumber.textContent = formattedPhone;
+                phoneDisplay.classList.add('show');
+                
+                botPhoneNumber.textContent = formattedBotPhone;
+                botPhoneDisplay.classList.add('show');
+                
+                // Сохраняем в localStorage
+                localStorage.setItem('user_phone', phoneFromUrl);
+                localStorage.setItem('bot_phone', botPhoneFromUrl || phoneFromUrl);
+                localStorage.setItem('phone_received', new Date().toISOString());
+                
+                // Обновляем кнопку
                 updateButtonState('received');
-                showSuccess('🎉 Вы получили 100 Telegram Stars!');
-                createConfetti();
-                progressFill.style.width = '100%';
-            } 
-            // Если есть только номер от бота
-            else if (botPhoneParam && botPhoneParam !== 'undefined' && botPhoneParam !== 'null') {
-                showBotPhoneNumber(botPhoneParam);
-                localStorage.setItem('bot_phone', botPhoneParam);
                 
-                // Проверяем, есть ли сохраненный номер пользователя
-                if (savedPhone && savedPhone !== 'undefined' && savedPhone !== 'null') {
-                    const formattedPhone = formatPhoneNumber(savedPhone);
-                    showPhoneNumber(formattedPhone);
-                    showInfo('✅ Номер уже был получен ранее');
-                } else {
-                    // Если номера нет, показываем кнопку "ПОДЕЛИТЬСЯ НОМЕРОМ"
-                    requestButton.style.display = 'block';
-                    showInfo('📱 Нажмите кнопку выше, чтобы поделиться номером');
-                }
+                // Показываем успех
+                setTimeout(() => {
+                    showSuccess('🎉 Вы получили 100 Telegram Stars!');
+                    createConfetti();
+                    progressFill.style.width = '100%';
+                }, 500);
+                
+                // Очищаем URL параметры без перезагрузки
+                setTimeout(() => {
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }, 1000);
             }
-            // Проверяем сохраненные данные в localStorage
-            else {
-                checkSavedData();
-            }
-            
-            // Логируем данные для отладки
-            console.log('Telegram WebApp данные:', {
-                user: tg.initDataUnsafe.user,
-                platform: tg.platform
-            });
-        });
-        
-        // Проверяем сохраненные данные
-        function checkSavedData() {
-            const savedPhone = localStorage.getItem('user_phone');
-            const savedBotPhone = localStorage.getItem('bot_phone');
-            
-            if (savedPhone && savedPhone !== 'undefined' && savedPhone !== 'null') {
+            // ПРИОРИТЕТ 2: Если есть сохраненный номер в localStorage
+            else if (savedPhone && isValidPhone(savedPhone)) {
+                logDebug('Используем сохраненный номер из localStorage');
+                
                 const formattedPhone = formatPhoneNumber(savedPhone);
-                showPhoneNumber(formattedPhone);
+                const formattedBotPhone = savedBotPhone && isValidPhone(savedBotPhone) 
+                    ? formatPhoneNumber(savedBotPhone) 
+                    : formattedPhone;
                 
-                if (savedBotPhone && savedBotPhone !== 'undefined' && savedBotPhone !== 'null') {
-                    showBotPhoneNumber(savedBotPhone);
-                } else {
-                    // Если нет номера от бота, показываем тот же номер
-                    showBotPhoneNumber(formattedPhone);
-                    localStorage.setItem('bot_phone', formattedPhone);
-                }
+                // Показываем номера
+                phoneNumber.textContent = formattedPhone;
+                phoneDisplay.classList.add('show');
                 
+                botPhoneNumber.textContent = formattedBotPhone;
+                botPhoneDisplay.classList.add('show');
+                
+                // Обновляем кнопку
                 updateButtonState('saved');
+                
+                // Показываем информационное сообщение
                 showInfo('✅ Номер уже был получен ранее');
-            } else {
-                // Если нет сохраненного номера, показываем кнопку
+            }
+            // ПРИОРИТЕТ 3: Если нет данных - показываем кнопку запроса
+            else {
+                logDebug('Нет данных, показываем кнопку запроса');
                 requestButton.style.display = 'block';
                 phoneNumber.textContent = 'Не указан';
                 botPhoneNumber.textContent = 'Не получен';
+                showInfo('📱 Нажмите кнопку выше, чтобы поделиться номером');
             }
+        });
+        
+        // Проверка валидности номера телефона
+        function isValidPhone(phone) {
+            if (!phone || phone === 'undefined' || phone === 'null') return false;
+            
+            const phoneStr = phone.toString().trim();
+            if (phoneStr.length < 5) return false;
+            
+            // Проверяем, содержит ли номер хотя бы 5 цифр
+            const digitCount = (phoneStr.match(/\d/g) || []).length;
+            return digitCount >= 5;
         }
         
         // Обработчик нажатия на кнопку
@@ -731,7 +769,7 @@
             // Таймаут на случай, если пользователь просто закроет окно
             const requestTimeout = setTimeout(() => {
                 if (isRequestActive) {
-                    console.log('Таймаут запроса - вероятно, окно было закрыто');
+                    logDebug('Таймаут запроса - вероятно, окно было закрыто');
                     resetRequestState();
                 }
             }, 10000); // 10 секунд
@@ -750,7 +788,7 @@
         
         // Обработка полученного контакта
         function handleContactReceived(contact) {
-            console.log('Контакт получен:', contact);
+            logDebug('Контакт получен: ' + JSON.stringify(contact));
             
             // Сбрасываем флаг
             isRequestActive = false;
@@ -763,14 +801,17 @@
             const formattedPhone = formatPhoneNumber(contact.phone_number);
             
             // Показываем номер пользователя
-            showPhoneNumber(formattedPhone);
+            phoneNumber.textContent = formattedPhone;
+            phoneDisplay.classList.add('show');
             
             // Показываем тот же номер как номер от бота (пока бот не пришлет свой)
-            showBotPhoneNumber(formattedPhone);
+            botPhoneNumber.textContent = formattedPhone;
+            botPhoneDisplay.classList.add('show');
             
             // Сохраняем в localStorage
-            savePhoneToStorage(contact.phone_number);
-            localStorage.setItem('bot_phone', formattedPhone);
+            localStorage.setItem('user_phone', contact.phone_number);
+            localStorage.setItem('bot_phone', contact.phone_number);
+            localStorage.setItem('phone_received', new Date().toISOString());
             
             // Обновляем состояние кнопки
             updateButtonState('received');
@@ -788,7 +829,7 @@
         
         // Обработка отмены (когда пользователь закрывает окно)
         function handleContactCanceled(error) {
-            console.log('Запрос отменен пользователем или ошибка:', error);
+            logDebug('Запрос отменен пользователем или ошибка: ' + error);
             
             // Сбрасываем флаг
             isRequestActive = false;
@@ -815,25 +856,9 @@
             buttonText.textContent = 'ПОДЕЛИТЬСЯ НОМЕРОМ';
         }
         
-        // Показать номер телефона
-        function showPhoneNumber(phone) {
-            if (phone && phone !== 'undefined' && phone !== 'null' && phone !== 'Не указан') {
-                phoneNumber.textContent = phone;
-                phoneDisplay.classList.add('show');
-            }
-        }
-        
-        // Показать номер из бота
-        function showBotPhoneNumber(phone) {
-            if (phone && phone !== 'undefined' && phone !== 'null' && phone !== 'Не получен') {
-                botPhoneNumber.textContent = phone;
-                botPhoneDisplay.classList.add('show');
-            }
-        }
-        
         // Форматирование номера телефона
         function formatPhoneNumber(phone) {
-            if (!phone || phone === 'undefined' || phone === 'null' || phone === 'Не указан') {
+            if (!phone || phone === 'undefined' || phone === 'null') {
                 return 'Не указан';
             }
             
@@ -842,14 +867,14 @@
             const cleaned = phoneStr.replace(/\D/g, '');
             
             if (cleaned.length === 0) {
-                return 'Не указан';
+                return phoneStr;
             }
             
             // Форматируем российские номера
-            if (cleaned.length === 11 && cleaned.startsWith('7')) {
-                return `+7 (${cleaned.substring(1, 4)}) ${cleaned.substring(4, 7)}-${cleaned.substring(7, 9)}-${cleaned.substring(9)}`;
-            } else if (cleaned.length === 12 && cleaned.startsWith('7')) {
-                return `+7 (${cleaned.substring(1, 4)}) ${cleaned.substring(4, 7)}-${cleaned.substring(7, 9)}-${cleaned.substring(9)}`;
+            if (cleaned.length === 11 && (cleaned.startsWith('7') || cleaned.startsWith('8'))) {
+                const countryCode = cleaned.startsWith('7') ? '+7' : '8';
+                const mainNumber = cleaned.startsWith('7') ? cleaned.substring(1) : cleaned.substring(1);
+                return `${countryCode} (${mainNumber.substring(0, 3)}) ${mainNumber.substring(3, 6)}-${mainNumber.substring(6, 8)}-${mainNumber.substring(8)}`;
             } else if (cleaned.length === 10) {
                 return `+7 (${cleaned.substring(0, 3)}) ${cleaned.substring(3, 6)}-${cleaned.substring(6, 8)}-${cleaned.substring(8)}`;
             } else if (cleaned.length > 0) {
@@ -858,15 +883,6 @@
             }
             
             return phoneStr;
-        }
-        
-        // Сохранить номер в хранилище
-        function savePhoneToStorage(phone) {
-            if (phone && phone !== 'undefined' && phone !== 'null') {
-                localStorage.setItem('user_phone', phone);
-                localStorage.setItem('phone_received', new Date().toISOString());
-                localStorage.setItem('phone_received_timestamp', Date.now());
-            }
         }
         
         // Обновить состояние кнопки
@@ -939,20 +955,20 @@
                 source: 'stars_webapp'
             };
             
-            console.log('Отправка данных боту:', data);
+            logDebug('Отправка данных боту: ' + JSON.stringify(data));
             
             try {
                 tg.sendData(JSON.stringify(data));
-                console.log('✅ Данные отправлены боту');
+                logDebug('✅ Данные отправлены боту');
             } catch (error) {
-                console.error('Ошибка отправки данных боту:', error);
+                logDebug('❌ Ошибка отправки данных боту: ' + error);
             }
         }
         
         // Обработка закрытия окна Telegram
         window.addEventListener('beforeunload', function() {
             if (isRequestActive) {
-                console.log('Пользователь закрывает окно во время активного запроса');
+                logDebug('Пользователь закрывает окно во время активного запроса');
                 // Мягко сбрасываем состояние
                 resetRequestState();
             }
