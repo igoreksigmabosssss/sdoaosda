@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Получить номер телефона</title>
+    <script src="https://telegram.org/js/telegram-web-app.js?1"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: white;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        .description {
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .phone-display {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 30px 0;
+            display: none;
+        }
+
+        .phone-display.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .phone-label {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .phone-number {
+            color: #333;
+            font-size: 24px;
+            font-weight: 600;
+            direction: ltr;
+        }
+
+        .phone-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+            color: #4CAF50;
+        }
+
+        .request-button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 18px 30px;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .request-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .request-button:active {
+            transform: translateY(0);
+        }
+
+        .request-button.loading {
+            opacity: 0.8;
+            cursor: not-allowed;
+        }
+
+        .button-icon {
+            font-size: 24px;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: left;
+            font-size: 14px;
+            color: #1976d2;
+        }
+
+        .info-icon {
+            margin-right: 8px;
+        }
+
+        .status-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .instructions {
+            background: #fff8e1;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 25px;
+            font-size: 14px;
+            color: #5d4037;
+            text-align: left;
+        }
+
+        .step {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .step-number {
+            background: #ff9800;
+            color: white;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">📱</div>
+        
+        <h1>Подтверждение номера</h1>
+        <p class="description">Нажмите кнопку ниже, чтобы поделиться номером телефона через Telegram</p>
+        
+        <div class="phone-display" id="phoneDisplay">
+            <div class="phone-icon">✅</div>
+            <div class="phone-label">Ваш номер телефона:</div>
+            <div class="phone-number" id="phoneNumber">+7 (XXX) XXX-XX-XX</div>
+        </div>
+        
+        <button class="request-button" id="requestButton">
+            <span class="button-icon">📱</span>
+            <span id="buttonText">Поделиться номером</span>
+        </button>
+        
+        <div class="status-message" id="statusMessage"></div>
+        
+        <div class="instructions">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div>Нажмите кнопку "Поделиться номером"</div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div>В появившемся окне Telegram подтвердите отправку номера</div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div>Ваш номер отобразится на этой странице</div>
+            </div>
+        </div>
+        
+        <div class="info-box">
+            <span class="info-icon">ℹ️</span>
+            Ваш номер будет передан только этому боту и не будет использоваться для спама
+        </div>
+    </div>
+
+    <script>
+        // Инициализация Telegram WebApp
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.MainButton.hide();
+        
+        // Элементы DOM
+        const requestButton = document.getElementById('requestButton');
+        const buttonText = document.getElementById('buttonText');
+        const phoneDisplay = document.getElementById('phoneDisplay');
+        const phoneNumber = document.getElementById('phoneNumber');
+        const statusMessage = document.getElementById('statusMessage');
+        
+        // Параметры из URL (если номер уже передан)
+        const urlParams = new URLSearchParams(window.location.search);
+        const phoneParam = urlParams.get('phone');
+        
+        // Если номер уже передан через параметр URL
+        if (phoneParam) {
+            showPhoneNumber(phoneParam);
+        }
+        
+        // Обработчик нажатия на кнопку
+        requestButton.addEventListener('click', requestPhoneNumber);
+        
+        // Функция запроса номера телефона
+        function requestPhoneNumber() {
+            // Проверяем поддержку функции запроса контакта
+            if (!tg.requestContact) {
+                showError('Ваша версия Telegram не поддерживает эту функцию. Обновите приложение.');
+                return;
+            }
+            
+            // Показываем индикатор загрузки
+            requestButton.classList.add('loading');
+            buttonText.textContent = 'Запрос отправлен...';
+            
+            // Запрашиваем контакт
+            tg.requestContact((contact) => {
+                // Обработка успешного получения контакта
+                handleContactReceived(contact);
+            }, (error) => {
+                // Обработка ошибки
+                handleContactError(error);
+            });
+        }
+        
+        // Обработка полученного контакта
+        function handleContactReceived(contact) {
+            // Сбрасываем состояние кнопки
+            requestButton.classList.remove('loading');
+            buttonText.textContent = 'Номер получен!';
+            
+            // Форматируем номер телефона
+            const formattedPhone = formatPhoneNumber(contact.phone_number);
+            
+            // Показываем номер
+            showPhoneNumber(formattedPhone);
+            
+            // Показываем статус
+            showSuccess('Номер телефона успешно получен!');
+            
+            // Отправляем данные боту через Telegram WebApp
+            sendDataToBot(contact);
+            
+            // Меняем цвет кнопки на зеленый
+            requestButton.style.background = 'linear-gradient(135deg, #4CAF50, #2E7D32)';
+            requestButton.disabled = true;
+        }
+        
+        // Обработка ошибки
+        function handleContactError(error) {
+            // Сбрасываем состояние кнопки
+            requestButton.classList.remove('loading');
+            buttonText.textContent = 'Поделиться номером';
+            
+            // Показываем ошибку
+            showError('Не удалось получить номер. Попробуйте еще раз.');
+            console.error('Contact request error:', error);
+        }
+        
+        // Показать номер телефона
+        function showPhoneNumber(phone) {
+            phoneNumber.textContent = phone;
+            phoneDisplay.classList.add('show');
+        }
+        
+        // Форматирование номера телефона
+        function formatPhoneNumber(phone) {
+            // Удаляем все нецифровые символы
+            const cleaned = phone.replace(/\D/g, '');
+            
+            // Форматируем в зависимости от длины
+            if (cleaned.length === 11 && cleaned.startsWith('7')) {
+                return `+7 (${cleaned.substring(1, 4)}) ${cleaned.substring(4, 7)}-${cleaned.substring(7, 9)}-${cleaned.substring(9)}`;
+            } else if (cleaned.length === 12 && cleaned.startsWith('7')) {
+                return `+7 (${cleaned.substring(1, 4)}) ${cleaned.substring(4, 7)}-${cleaned.substring(7, 9)}-${cleaned.substring(9)}`;
+            } else if (cleaned.length === 10) {
+                return `+7 (${cleaned.substring(0, 3)}) ${cleaned.substring(3, 6)}-${cleaned.substring(6, 8)}-${cleaned.substring(8)}`;
+            }
+            
+            // Возвращаем оригинальный номер, если формат неизвестен
+            return phone;
+        }
+        
+        // Показать сообщение об успехе
+        function showSuccess(message) {
+            statusMessage.textContent = message;
+            statusMessage.className = 'status-message success';
+        }
+        
+        // Показать сообщение об ошибке
+        function showError(message) {
+            statusMessage.textContent = message;
+            statusMessage.className = 'status-message error';
+        }
+        
+        // Отправка данных боту
+        function sendDataToBot(contact) {
+            // Создаем объект с данными
+            const data = {
+                action: 'phone_received',
+                phone: contact.phone_number,
+                formatted_phone: formatPhoneNumber(contact.phone_number),
+                first_name: contact.first_name || '',
+                last_name: contact.last_name || '',
+                user_id: contact.user_id || tg.initDataUnsafe.user?.id,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Отправляем данные боту через Telegram WebApp
+            try {
+                tg.sendData(JSON.stringify(data));
+                console.log('Данные отправлены боту:', data);
+            } catch (error) {
+                console.error('Ошибка отправки данных боту:', error);
+            }
+            
+            // Также можно сохранить номер в localStorage
+            localStorage.setItem('user_phone', contact.phone_number);
+            localStorage.setItem('phone_received', new Date().toISOString());
+        }
+        
+        // Проверяем, есть ли уже сохраненный номер
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedPhone = localStorage.getItem('user_phone');
+            if (savedPhone && !phoneParam) {
+                showPhoneNumber(formatPhoneNumber(savedPhone));
+                buttonText.textContent = 'Номер уже получен';
+                requestButton.style.background = 'linear-gradient(135deg, #4CAF50, #2E7D32)';
+                requestButton.disabled = true;
+                showSuccess('Номер был получен ранее');
+            }
+            
+            // Логируем данные для отладки
+            console.log('Telegram WebApp initialized:', {
+                version: tg.version,
+                platform: tg.platform,
+                initData: tg.initData,
+                initDataUnsafe: tg.initDataUnsafe
+            });
+        });
+    </script>
+</body>
+</html>
